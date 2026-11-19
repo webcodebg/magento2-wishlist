@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+  ~ @package      Webcode_magento2
+  ~
+  ~ @author       Kostadin Bashev (bashev@webcode.bg)
+  ~ @copyright    Copyright © 2021 Webcode Ltd. (https://webcode.bg/)
+  ~ @license      See LICENSE.txt for license details.
+  -->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="Webcode_Wishlist">
+        <sequence>
+            <module name="Magento_Wishlist"/>
+            <module name="MageSuite_GuestWishlist"/>
+        </sequence>
+    </module>
+</config>

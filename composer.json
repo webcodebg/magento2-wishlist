@@ -1,0 +1,20 @@
+{
+    "name": "webcode/module-wishlist",
+    "version": "1.1.1",
+    "description": "Wishlist",
+    "type": "magento2-module",
+    "require": {
+        "magento/framework": "*",
+        "magento/module-wishlist": "*",
+        "creativestyle/magesuite-guest-wishlist": "*"
+    },
+    "license": ["OSL-3.0", "AFL-3.0"],
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Webcode\\Wishlist\\": ""
+        }
+    }
+}
