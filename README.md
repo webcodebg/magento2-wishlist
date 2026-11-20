@@ -5,6 +5,7 @@ Wishlist without page reloads: products are added to and removed from the wishli
 ## How
 
 - The *Add to Wish List* buttons (`[data-action="add-to-wishlist"]`) and the remove buttons of the wishlist sidebar post via AJAX: the button reads *Adding...*, then *Added to Wish List*, and the wishlist block is refreshed in place.
+- The AJAX actions answer JSON: `{"success": true}` with the refreshed wishlist block when done, `{"success": false, "error": "not_saved", "message": "..."}` when Magento refused the action (the error message it added). Only a success marks the button as added.
 - Products already in the customer's wishlist get the class `added` on their *Add to Wish List* button on every page, from the customer's `wishlist` section data — style it as a filled heart.
 - For a guest, the AJAX add/remove/update answers JSON `{"success": false, "error": "not_logged_in"}` instead of a redirect; the button gets its own text back and the guest is sent to the login page, as without AJAX. After logging in, Magento completes the add it kept in the session.
 - After logging in, Magento sends the customer back to the URL they came from. When that is a wishlist action that only accepts POST (`remove`, `update`, `cart`, `allcart`, `fromcart`, `send`, `updateitemoptions`), the return was a GET and ended in a 404; the module drops such URLs and the usual login redirect applies.

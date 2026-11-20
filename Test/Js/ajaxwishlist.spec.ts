@@ -36,6 +36,11 @@ function fakeJquery(btn: Stub, block: Stub) {
             }
             el.title = value;
         },
+        removeAttr: (name: string) => {
+            if (name === 'title') {
+                el.title = undefined;
+            }
+        },
         addClass: (cls: string) => el.classes.add(cls),
         data: (key: string, value?: unknown) => {
             if (value === undefined) {
@@ -109,15 +114,15 @@ describe('ajaxwishlist.js', () => {
         expect((globalThis as any).window.location.href).toBe('https://shop.test/customer/account/login');
     });
 
-    it('another refusal restores the button and stays on the page', () => {
-        widget._successHandler({ success: false, error: 'something' }, form);
+    it('a refusal by Magento (not_saved) restores the button and stays on the page', () => {
+        widget._successHandler({ success: false, error: 'not_saved', message: 'We can\'t add the item.' }, form);
 
         expect(btn.text).toBe('Add to Wish List');
         expect(btn.classes.has('added')).toBe(false);
         expect((globalThis as any).window.location.href).toBe('https://shop.test/product.html');
     });
 
-    it('a logged-in add (the core answers with a redirect, so HTML) marks the button added', () => {
+    it('an answer of another shape (a theme or module replacing the response) still marks the button added', () => {
         widget._successHandler('<!doctype html><html></html>', form);
 
         expect(btn.text).toBe('Added to Wish List');
@@ -129,6 +134,25 @@ describe('ajaxwishlist.js', () => {
 
         expect(btn.classes.has('added')).toBe(true);
         expect(block.replaced).toBe('<form id="wishlist-view-form"></form>');
+    });
+
+    it('a button without a title gets no empty title back', () => {
+        const untitled = button('Add to Wish List', undefined as unknown as string);
+        const fake = fakeJquery(untitled, block);
+        loadAmdModule('view/frontend/web/js/ajaxwishlist.js', {
+            jquery: fake.$,
+            'mage/translate': (s: string) => s,
+            'mage/url': { build: (path: string) => 'https://shop.test/' + path },
+            'mage/loader': {},
+        });
+        const w = fake.widget();
+        w.disableAddToWishlistButton(form);
+        expect(untitled.title).toBe('Adding...');
+
+        w._successHandler({ success: false, error: 'not_logged_in' }, form);
+
+        expect(untitled.text).toBe('Add to Wish List');
+        expect(untitled.title).toBeUndefined();
     });
 
     it('a failed request restores the button', () => {

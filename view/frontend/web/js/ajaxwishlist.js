@@ -75,10 +75,11 @@ define([
         },
 
         /**
-         * The wishlist actions answer a logged-in customer with a redirect (the browser
-         * follows it, so the response is HTML) and refuse only with JSON
-         * {"success": false} — e.g. {"error": "not_logged_in"} for a guest. Only an
-         * explicit refusal means "not added".
+         * The module answers the AJAX wishlist actions with JSON: {"success": true}
+         * (with the refreshed wishlist block) when done, {"success": false} when not —
+         * "not_logged_in" for a guest, "not_saved" when Magento refused the action.
+         * Only an explicit refusal means "not added": an answer of another shape (a
+         * theme or module replacing the response) keeps the old behaviour.
          *
          * @param {Object|String} data
          * @param {jQuery} form
@@ -137,7 +138,13 @@ define([
 
             if (addToWishlistButton.data('wishlistText') !== undefined) {
                 addToWishlistButton.find('span').text(addToWishlistButton.data('wishlistText'));
-                addToWishlistButton.attr('title', addToWishlistButton.data('wishlistTitle') || '');
+
+                if (addToWishlistButton.data('wishlistTitle') === undefined) {
+                    // The button had no title (the product page one): do not leave title="".
+                    addToWishlistButton.removeAttr('title');
+                } else {
+                    addToWishlistButton.attr('title', addToWishlistButton.data('wishlistTitle'));
+                }
             }
         },
 

@@ -6,6 +6,7 @@ use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\Message\MessageInterface;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\Result\PageFactory;
@@ -40,6 +41,17 @@ class Index
      * @var \Magento\Framework\Serialize\Serializer\Json
      */
     private Json $json;
+
+    /**
+     * Error messages in the session before the action ran.
+     *
+     * The wishlist actions report a failure only as an error message (the product
+     * cannot be added, the item is gone...), so an error that appears while the
+     * action runs is what "not done" looks like.
+     *
+     * @var int
+     */
+    private int $errorsBefore = 0;
 
     /**
      * @param \Magento\Catalog\Api\ProductRepositoryInterface $productRepository
@@ -94,6 +106,18 @@ class Index
     }
 
     /**
+     * Counts the error messages before the action runs.
+     *
+     * @param WishlistAction $subject
+     *
+     * @return void
+     */
+    public function beforeExecute(WishlistAction $subject): void
+    {
+        $this->errorsBefore = $this->countErrors();
+    }
+
+    /**
      * After wishlist execute action plugin.
      *
      * @param WishlistAction $subject
@@ -114,6 +138,20 @@ class Index
         $page = $this->pageFactory->create();
         $page->addHandle('wishlist_index_index');
 
+        // An error added by the action means it was not done (e.g. the product
+        // cannot be added): answering "success" there made the button say "Added".
+        if ($this->countErrors() > $this->errorsBefore) {
+            $last = $this->messageManager->getMessages(false)->getLastAddedMessage();
+
+            return $response->representJson((string) $this->json->serialize([
+                'success' => false,
+                'error' => 'not_saved',
+                'message' => $last && $last->getType() === MessageInterface::TYPE_ERROR
+                    ? (string) $last->getText()
+                    : '',
+            ]));
+        }
+
         $data = ['success' => true];
         if (($block = $this->getWishlistBlock()) && $block instanceof BlockInterface) {
             $data['wishlist'] = $block->toHtml();
@@ -123,6 +161,16 @@ class Index
 //        $this->messageManager->getMessages(true);
 
         return $response->representJson((string) $this->json->serialize($data));
+    }
+
+    /**
+     * Error messages currently in the session.
+     *
+     * @return int
+     */
+    private function countErrors(): int
+    {
+        return (int) $this->messageManager->getMessages(false)->getCountByType(MessageInterface::TYPE_ERROR);
     }
 
     /**
@@ -137,5 +185,4 @@ class Index
 
         return $page->getLayout()->getBlock('customer.wishlist');
     }
-
 }
